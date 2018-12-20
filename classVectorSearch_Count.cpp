@@ -1,14 +1,10 @@
 
 #include "stdafx.h"
-#include <thread>
 #include <iostream>
 #include <vector>
 #include <ctime>
 #include <random>
 #include <algorithm>
-
-#include <future>
-#include <chrono>
 
 using namespace std;
 
@@ -16,16 +12,18 @@ using namespace std;
 /****** class def ******/
 /***********************/
 
-//template <class T>
+template <class T>
 class countSrch {
 public:
-	countSrch(int val) {
-		for (int i = val; i <= 1000; i++) {
+	countSrch(T val) {
+		for (T i = val; i <= 1000; i++) {
 			tmpVec.push_back(rand() % 100 + 1);
 		}
 	}
 
-	void runMultiThread(int &runResult);
+	void setSrch(T tmpSrch) {
+		srch = tmpSrch;
+	}
 	
 	void prntVec() {
 		for (int j = 0; j < tmpVec.size(); j++) {
@@ -38,24 +36,18 @@ public:
 		sort(tmpVec.begin(), tmpVec.end());
 	}
 
-	void setSrch(int val) {
-		srchVal = val;
-	}
-
-
-	int vecSrch(int &srchResult) {
-		pos = distance(tmpVec.begin(), find(tmpVec.begin(), tmpVec.end(), srchVal));
+	int vecSrch() {
+		pos = distance(tmpVec.begin(), find(tmpVec.begin(), tmpVec.end(), srch));
 		if (pos >= tmpVec.size()) {
-			return srchResult = -1;
+			return -1;
 		}
 		else
-			return srchResult = pos;
-			
+			return pos;
 	}
 
-	int countOcc(int &countRef) {
-		counter = count(tmpVec.begin(), tmpVec.end(), srchVal);
-		return countRef = counter;
+	int countOcc() {
+		counter = count(tmpVec.begin(), tmpVec.end(), srch);
+		return counter;
 		/*
 		bool flag = true;
 		tmpPos = pos;
@@ -99,20 +91,13 @@ private:
 	vector<int>::iterator it;
 	vector<int>::iterator tmpIt;
 
-	vector<int>tmpVec;
+	vector<T>tmpVec;
 
+	T srch;
 	int counter;
-
-	int resultFromClass;
-	int srchVal;
 };
 
-void countSrch::runMultiThread(int &runResult) {
-	thread t1(&countSrch::vecSrch, this, runResult);
-	//thread t2(&countSrch::countOcc, this, runCount);
-	t1.join();
-	//t2.join();
-}
+
 
 
 /********************/
@@ -129,7 +114,7 @@ int main() {
 	int startInt = 0;
 	char startChar = 'a';
 
-	countSrch obj(startInt);
+	countSrch<int> obj(startInt);
 
 	//obj.sortTmpVec();
 	obj.prntVec();
@@ -138,17 +123,9 @@ int main() {
 	cin >> srchVal;
 
 	cout << endl;
-
-	/*
-	obj.vecSrch(srchVal);
-	obj.getResult(result);
-	count = obj.countOcc(srchVal);
-	*/
-
 	obj.setSrch(srchVal);
-	obj.runMultiThread(result);
-
-	
+	result = obj.vecSrch();
+	count = obj.countOcc();
 	if (result == -1) {
 		cout << "Value not found." << endl;
 	}
