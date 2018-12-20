@@ -16,8 +16,8 @@ template <class T>
 class countSrch {
 public:
 	countSrch(T val) {
-		for (T i = val; i <= 10; i++) {
-			tmpVec.push_back(i);
+		for (T i = val; i <= 1000; i++) {
+			tmpVec.push_back(rand() % 100 + 1);
 		}
 	}
 
@@ -105,6 +105,8 @@ private:
 /********************/
 
 int main() {
+	srand(time(NULL));
+
 	int srchVal = 0;
 	int result = 0;
 	int count = 0;
