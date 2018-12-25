@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include <memory>
 #include <iostream>
 #include <chrono>
 #include <ratio>
@@ -16,20 +17,25 @@ using std::milli;
 using std::execution::par_unseq;
 using namespace std;
 
-const size_t testSize = 20'500'000;
+const size_t testSize = 3'000'000;
 
 template <class T>
 class countSrch {
 public:
 
 	countSrch() {
+		cout << "Object created." << endl;
 		tmpVec.resize(testSize);
 		for (auto& d : tmpVec) {
-			d = (rand() % 1000000);
+			d = (rand() % 10000);
 		}
 	}
 
-	void setSrch(double tmpSrch) {
+	~countSrch() {
+		cout << "Object destroyed." << endl;
+	}
+
+	void setSrch(T tmpSrch) {
 		srch = tmpSrch;
 	}
 	
@@ -41,98 +47,77 @@ public:
 	}
 
 	void sortTmpVec() {
+		cout << "Sorting vector using parallelism." << endl;
 		const auto start = high_resolution_clock::now();
 		sort(par_unseq, tmpVec.begin(), tmpVec.end());
 		const auto end = high_resolution_clock::now();
-
 		printf("Duration: %fms\n", duration_cast<duration<double, milli>>(end - start).count());
 	}
 
 	void sortTmpVecWOpar() {
+		cout << "Sorting vector without using parallelism." << endl;
 		const auto start = high_resolution_clock::now();
 		sort(tmpVec.begin(), tmpVec.end());
 		const auto end = high_resolution_clock::now();
-
 		printf("Duration with out parallelism: %fms\n", duration_cast<duration<double, milli>>(end - start).count());
+
+		cout << endl;
 	}
 
-	int vecSrch() {
+	
+	void refVecSrchAndCount(T& returnPos, T& counterRef) {
 		pos = distance(tmpVec.begin(), find(par_unseq, tmpVec.begin(), tmpVec.end(), srch));
 		if (pos >= tmpVec.size()) {
-			return -1;
+			returnPos -1;
 		}
 		else
-			return pos;
-	}
+			returnPos = pos;
 
-	int countOcc() {
-		counter = count(par_unseq, tmpVec.begin(), tmpVec.end(), srch);
-		return counter;
-		/*
-		bool flag = true;
-		tmpPos = pos;
-		counter = 0;
-		it = tmpVec.begin() + pos;
-		tmpIt = it;
-		while (flag) {
-			if (tmpVec.at(pos) == srch && tmpVec.at(pos) < tmpVec.size() + 1) {
-				counter++;
-				pos++;
-				//tmpPos++;
-				it++;
-			}
-			else
-				flag = false;
-		}
-		return counter;
-		*/
+		counterRef = count(par_unseq, tmpVec.begin(), tmpVec.end(), srch);
 	}
-
 
 private:
 	ptrdiff_t tmpPos;
 	ptrdiff_t pos;
 
-	vector<int>::iterator it;
-	vector<int>::iterator tmpIt;
-
 	vector<T>tmpVec;
 
 	T srch;
-	int counter;
 };
 
 
 int main() {
-	//srand(time(NULL));
+	srand(time(NULL));
 
-	double srchVal = 0;
+	vector<double> testNumbers;
+	for (int i = 0; i <= 5; i++) {
+		testNumbers.push_back(rand() % 10000);
+	}
+
 	double result = 0;
-	int count = 0;
-
-	countSrch<double> obj;
-	countSrch<double> obj2;
-	
-	// obj.prntVec();
-	
-	cout << "Enter a value to search: ";
-	cin >> srchVal;
-	
+	double counterMain = 0;
 
 	cout << endl;
-	obj.setSrch(srchVal);
-	result = obj.vecSrch();
-	count = obj.countOcc();
-	if (result == -1) {
-		cout << "Value not found." << endl;
-	}
-	else {
-		cout << "First occurence of value: " << srchVal << " found at index: " << result << endl;
-		cout << "value was found: " << count << " time(s)." << endl << endl;
+
+	unique_ptr<countSrch<double>> obj(new countSrch<double>());
+	unique_ptr<countSrch<char>> obj2(new countSrch<char>());
+	
+	cout << endl;
+
+	for (int j = 0; j < testNumbers.size(); j++) {
+		obj->setSrch(testNumbers.at(j));
+		obj->refVecSrchAndCount(result, counterMain);
+		if (result == -1) {
+			cout << "Value not found." << endl;
+		}
+		else {
+			cout << "First occurence of value: " << testNumbers.at(j) << " found at index: " << result << endl;
+			cout << "value was found: " << counterMain << " time(s)." << endl << endl;
+		}
 	}
 
-	obj.sortTmpVec();
-	obj2.sortTmpVecWOpar();
+	obj->sortTmpVec();
+	obj2->sortTmpVecWOpar();
 
     return 0;
 }
